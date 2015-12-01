@@ -5,14 +5,14 @@ Both IBM Cloudant and Iris Couch are compatible with the open source Apache Couc
 This document will walk through the process of migrating your data from Iris Couch to Cloudant. Here is the migration plan:
 
 1. Create a free IBM Cloudant account
-1. Use the replication command to move your data from Iris Couch to Cloudant
+1. Use replication to move your data from Iris Couch to Cloudant
 1. Configure virtual host settings (if you have any)
 1. Update your application
 1. Understand the minor differences between Cloudant and Iris Couch
 
 Both Cloudant and Iris Couch are compatible (and based on) Apache CouchDB; and CouchDB excels at replication. Thus Iris Couch is a very convenient migration platform--both to it and from it. Most people can completely migrate in an hour or so.
 
-Indeed, Iris Couch has a very helpful blog post, [How-To: Bail out on Iris Couch][iris-bail]. That walkthough is great for moving to Apache Couchdb; however, this document will focus specifically on Cloudant, a quicker and simpler task. So let's begin!
+Indeed, Iris Couch has a very helpful blog post, [How-To: Bail out on Iris Couch][iris-bail]. That walkthough is great for moving to Apache CouchDB; however, this document will focus specifically on Cloudant, a quicker and simpler task. So let's begin!
 
 ## Preparation
 
@@ -20,27 +20,139 @@ In this document, we will use the example, *example.cloudant.com* and *example.i
 
 Before you begin this migration, you will need to know:
 
-1. Your Iris Couch URL, for example, *example.iriscouch.com*
-1. Your Iris Couch admin username and password. To confirm these:
-  1. Go to Futon: *https://example.iriscouch.com:6984/_utils/*
-  1. Click the *Login* link in the lower-right
+1. Your **Iris Couch URL**, for example, *example.iriscouch.com*
+1. Your Iris Couch **admin username and password**. You can confirm these by following the procedure in *Step 2* below. If you've forgotten it, you can [reset your Iris Couch admin password][iris-reset].
 
-    ![Futon Login link example](img/futon-login.png)
-
-  1. Input your admin username and password in the prompt
-
-    ![Futon login prompt](img/futon-prompt.png)
-
-https://jhs.iriscouch.com:6984/_utils/
-
-## Create a Free IBM Cloudant Account
+## Step 1: Create a Free IBM Cloudant Account
 
 IBM Cloudant is free! [Sign up for a free Cloudant account][sign-up]. Once you have signed up, [sign in][sign-in].
 
-## Set a temporary 
-[TODO]: dns,cors
+## Step 2: Sign in to your Iris Couch account
+
+To sign into Iris Couch as the admin:
+
+  1. Go to Futon: *https://example.iriscouch.com:6984/_utils/*
+  1. Click the *Login* link in the lower-right:
+
+    ![Futon Login link example](img/futon-login.png)
+
+  1. Input your admin username and password in the prompt:
+
+    ![Futon login prompt](img/futon-prompt.png)
+
+  1. You can confirm that you logged in successfully by looking at the label in the lower-right of Futon. It will say, "Welcome"
+
+    ![Futon logged in](img/logged-in.png)
+
+## Step 3: Replicate Databases
+
+Now we reach the heart of this whole exercise: transferring databases from Iris Couch to Cloudant.
+
+Of course, we will use replication to move the data; but what exactly is the procedure? We have a myriad of decisions to make. Replication can be done synchronously ("replicate, and tell me when you are finished") or asynchronously ("replicate quietly in the background"); either as a one-off, or continuously; either pushing or pulling; either initiated from Iris Couch or Cloudant. And what about automating the process?
+
+Since this is a one-time undertaking, let's keep it simple:
+
+* Stick to clicking and typing in the web interface; let's not worry about automation
+* Work primarily in the Cloudant dashboard
+* Simple, one-off replication. Let's not worry about continuous replication. (Advanced users who need this can simply follow this procedure and check that box on the form).
+
+Begin by looking at Futon in Iris Couch. You should see a list of your databases. Keep this list handy.
+
+**For each database in Iris Couch**, (in this example, a database named *foo*) do the following in the Cloudant dashboard.
+
+1. In the Cloudant dashboard, click the *Replication* tab, which should take you to *https://example.cloudant.com/dashboard.html#/replication*
+1. Click *New Replication* and fill out the form:
+  1. For *_id*, enter *iriscouch-* followed by the database name. For example, enter *iriscouch-foo*. This will help you to see the replication status at a glance
+  1. For *Source Database*, click *Remote Database* and enter the URL of the format https://**iriscouch-admin**:**iriscouch-password**@*example.iriscouch.com*/*foo*. That is, input your iris couch admin username, password, URL, and this database name, for example, *foo*). You can copy this full URL, so that next time, you can paste it and simply change the final database name.
+  1. For *Target Database*, click *New Database*, then click *Local*, and then input the database name, *foo*
+  1. **Do not** check *Make this replication continuous*
+1. Click the *Replicate* button. The dashboard will prompt you for your Cloudant password; so input it and click *Continue Replication*
+
+You will see the button label change to *Starting replication*, and shortly you will bounce to the *All Replications* tab. Stop to admire your new replication underway! If you click the document ID, you can see internal details about the replication, such as how much it has copied, and how many documents remain. After a while, the replication status will become *Triggered*, and finally *Completed*.
+
+Continue this step for every database listed in Futon on Iris Couch. Feel free to run multiple replications at the same time. Each is an independent process. They will not interfere with each other.
+
+Once you have initiated replication for all databasess, wait for all of their statuses to be *Completed*.  That's it! The hard part is done!
+
+## Step 4: Configure virtual host settings and CORS
+
+The vast majority of Iris Couch users do not use virtual hosting ("vhosts") or CORS. In both cases, these are advanced features for special-purpose applications; so if you are not familiar with virtual hosting or CORS on Iris Couch or Cloudant, then you can safely skip this step.
+
+On Iris Couch, you can see both vhosts and CORS settings in the *Configuration* tab, on the right-hand side of Futon.
+
+### CORS
+
+Look at your CORS settings in Iris Couch.
+
+![Futon CORS examples](img/cors.png)
+
+The vhost config has two important columns: the domain to serve, and the path to use for serving that domain (nearly always a "rewrite" path). In the screenshot:
+
+* The hosted domain is *example.com*
+* Queries to example.com will be served from the path */example_com/_design/example_com/_rewrite*
+
+**For each virtual host line in Iris Couch**, do the following in the Cloudant dashboard.
+
+1. In the Cloudant dashboard, click the *Account* tab, which should take you to *https://example.cloudant.com/dashboard.html#/account*
+1. Click *Virtual Hosts* and fill out the form:
+  1. For *Hostname*, copy the hostname from Futon on Iris Couch (such as *example.com*) and paste it here.
+  1. For *Path (optional)*, copy the path from Futon on Iris Couch (such as */example_com/_design/example_com/_rewrite*) and paste it here. But **remember to remove the leading slash**, because Cloudant will automatically prepend the slash character.
+1. Click *Save*. After a moment, you will see your virtual host entry listed on the dashboard page.
+
+Repeat this procedure for every virtual host you have configured for Iris Couch. That's it! Since you've already replicated your data, the necessary database and design documents are already in place. Be sure to read the next section, since you will very likely want to open the database to the public.
+
+
+### Virtual Hosting
+
+Look at your virtual hosts in Iris Couch.
+
+![Futon Virtual Host examples](img/vhosts.png)
+
+The vhost config has two important columns: the domain to serve, and the path to use for serving that domain (nearly always a "rewrite" path). In the screenshot:
+
+* The hosted domain is *example.com*
+* Queries to example.com will be served from the path */example_com/_design/example_com/_rewrite*
+
+**For each virtual host line in Iris Couch**, do the following in the Cloudant dashboard.
+
+1. In the Cloudant dashboard, click the *Account* tab, which should take you to *https://example.cloudant.com/dashboard.html#/account*
+1. Click *Virtual Hosts* and fill out the form:
+  1. For *Hostname*, copy the hostname from Futon on Iris Couch (such as *example.com*) and paste it here.
+  1. For *Path (optional)*, copy the path from Futon on Iris Couch (such as */example_com/_design/example_com/_rewrite*) and paste it here. But **remember to remove the leading slash**, because Cloudant will automatically prepend the slash character.
+1. Click *Save*. After a moment, you will see your virtual host entry listed on the dashboard page.
+
+Repeat this procedure for every virtual host you have configured for Iris Couch. That's it! Since you've already replicated your data, the necessary database and design documents are already in place. Be sure to read the next section, since you will very likely want to open the database to the public.
+
+Finally, with the vhosts in place, *test them*. This process is different for each application. But, for example, this is a simple way to test vhosts from the command prompt using the free cURL tool. The command will query Cloudant at the virtual host domain, and it will display the response headers.
+
+    $ curl -I example.cloudant.com -H 'Host: example.com'
+    HTTP/1.1 200 OK
+    X-Couch-Request-ID: b6b71c1d89
+    Vary: Accept
+    Server: CouchDB/1.0.2 (Erlang OTP/17)
+    Etag: "3B1WJJIVF36CDRTRMYF0NC2DR"
+    Date: Tue, 30 Nov 2015 14:48:50 GMT
+    Content-Type: text/html; charset=utf-8
+    Content-Length: 2563
+    X-Content-Type-Options: nosniff;
+
+Your results will vary slightly, but the key thing to note is the *Content-Type* is `text/html` and the *Content-Length* is correct for an HTML web page. Of course, you can omit the `-I` option to view the actual HTML output.
+
+## Optionally Publish a Database
+
+Iris Couch security permissions are slightly different from Cloudant: Iris Couch databases are *publicly readable* by default, but Cloudant databases are private by default. If you have used a vhost, or if you otherwise maintain publicly-accessible databases, you will need to enable that permission on Cloudant.
+
+**To make a Cloudant database publicly visible:**
+
+1. In the Cloudant dashboard, click the *Databases* tab,
+1. Click the name of the database
+1. Click *Permissions*
+1. If you want the *raw database API* accessible publicly, check the box intersecting the column *Reader* and the row *Everybody Else*.
+1. If you are publishing an app using vhosts, you will see a **Virtual Hosts** section. Check the *Reader* box for the appropriate domain name.
+
 [END]: ------------------------------------------------------------------------
 [iris-bail]: http://www.iriscouch.com/blog/2011/05/how-to-bail-out-on-iris-couch
+[iris-reset]: https://www.iriscouch.com/account/#/couchdb
 [sign-in]: https://cloudant.com/sign-in/
 [sign-up]: https://cloudant.com/sign-up/
 
