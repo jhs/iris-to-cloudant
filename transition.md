@@ -23,8 +23,13 @@ Before you begin this migration, you will need to know:
 1. Your Iris Couch URL, for example, *example.iriscouch.com*
 1. Your Iris Couch admin username and password. To confirm these:
   1. Go to Futon: *https://example.iriscouch.com:6984/_utils/*
-  1. Click the *Login* link in the lower-right ![Futon Login link example](img/futon-login.png)
-  1. Input your admin username and password in the prompt ![Futon login prompt](img/futon-prompt.png)
+  1. Click the *Login* link in the lower-right
+
+    ![Futon Login link example](img/futon-login.png)
+
+  1. Input your admin username and password in the prompt
+
+    ![Futon login prompt](img/futon-prompt.png)
 
 https://jhs.iriscouch.com:6984/_utils/
 
