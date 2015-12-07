@@ -1,22 +1,22 @@
 # How To Migrate from Iris Couch to IBM Cloudant
 
-Both IBM Cloudant and Iris Couch are compatible with the open source Apache CouchDB database; and so they are compatible with each other. That's great news! It means that you can easily migrate from Iris Couch to Cloudant with a minimum of troubles, using your web browser.
+Both IBM Cloudant and Iris Couch are compatible with the open source Apache CouchDB&trade; database, and so they are compatible with each other. That's great news! It means that you can easily migrate from Iris Couch to Cloudant with a minimum of troubles, using your web browser.
 
 This document will walk through the process of migrating your data from Iris Couch to Cloudant. Here is the migration plan:
 
 1. Create a free IBM Cloudant account
 1. Use replication to move your data from Iris Couch to Cloudant
-1. Transfer optional hosting configuration: CORS and virtual hosts
+1. Transfer optional hosting configurations: CORS and virtual hosts
 1. Make some databases public
 1. Update your application
 
-Both Cloudant and Iris Couch are compatible (and based on) Apache CouchDB; and CouchDB excels at replication. Thus Iris Couch is a very convenient migration platform--both to it and from it. Most people can completely migrate in an hour or so.
+Both Cloudant and Iris Couch are compatible (and based on) Apache CouchDB, and CouchDB excels at replication. Thus, Iris Couch is a convenient migration platform &mdash; both to it, and from it. Most people can completely migrate in an hour or so.
 
 Indeed, Iris Couch has a very helpful blog post, [How-To: Bail out on Iris Couch][iris-bail]. That walkthough is great for moving to Apache CouchDB; however, this document will focus specifically on Cloudant, a quicker and simpler task. So let's begin!
 
 ## Preparation
 
-In this document, we will use the example, *example.cloudant.com* and *example.iriscouch.com*; but of course your account will be your own, with your own user name prefixed before the `.cloudant.com` and `.iriscouch.com` domain. In all cases, substitute your own account's URL instead of *example.cloudant.com* and *example.iriscouch.com*.
+In this document, we will use the example, *example.cloudant.com* and *example.iriscouch.com*, but of course your account will be your own, with your own user name prefixed before the `.cloudant.com` and `.iriscouch.com` domain. In all cases, substitute your own account's URL instead of *example.cloudant.com* and *example.iriscouch.com*.
 
 Before you begin this migration, you will need to know:
 
@@ -25,7 +25,11 @@ Before you begin this migration, you will need to know:
 
 ## Step 1: Create a Free IBM Cloudant Account
 
-IBM Cloudant is free! [Sign up for a free Cloudant account][sign-up]. Once you have signed up, [sign in][sign-in].
+Like Iris Couch, IBM Cloudant has a free tier! [Sign up for a free Cloudant account][sign-up].
+
+Unlike Iris Couch, [Cloudant pricing](https://cloudant.com/product/pricing/) breaks down differently, but it's easy to stay within the free tier for smaller projects. For larger projects, Cloudant sells dedicated instances and manages them 24/7. I won't go into details here, but know that Cloudant offers different deployment models for heavier usage. (See their [product comparison](https://cloudant.com/product-options/) for more.)
+
+Once you have signed up, [sign in][sign-in].
 
 ## Step 2: Sign in to your Iris Couch account
 
@@ -48,13 +52,16 @@ To sign into Iris Couch as the admin:
 
 Now we reach the heart of this whole exercise: transferring databases from Iris Couch to Cloudant.
 
-Of course, we will use replication to move the data; but what exactly is the procedure? We have a myriad of decisions to make. Replication can be done synchronously ("replicate, and tell me when you are finished") or asynchronously ("replicate quietly in the background"); either as a one-off, or continuously; either pushing or pulling; either initiated from Iris Couch or Cloudant. And what about automating the process?
+Of course, we will use replication to move the data; but what exactly is the procedure? We have a myriad of decisions to make. Replication can be done synchronously ("replicate, and tell me when you are finished") or asynchronously ("replicate quietly in the background"); either as a one-off, or continuously; either pushing or pulling; and, finally, either initiated from Iris Couch or from Cloudant. And what about automating the process?
 
 Since this is a one-time undertaking, let's keep it simple:
 
 * Stick to clicking and typing in the web interface; let's not worry about automation
 * Work primarily in the Cloudant dashboard
 * Simple, one-off replication. Let's not worry about continuous replication. (Advanced users who need this can simply follow this procedure and check that box on the form).
+
+A note on continuous replication in Cloudant:
+> **Note:** Continuous replication jobs are helpful while initially migrating your data, but creating lots of ongoing, continuous replications *can* result in charges later on that are outside of Cloudant's free usage tier. Be sure to monitor your account usage in the Cloudant dashboard if you decide to make heavy use of continuous data replication. Their [pricing page](https://cloudant.com/product/pricing/) has more details on the free tier and metered billing rates.
 
 Begin by looking at Futon in Iris Couch. You should see a list of your databases. Keep this list handy.
 
@@ -149,7 +156,7 @@ Iris Couch security permissions are slightly different from Cloudant: Iris Couch
 
 ## Update Your Application
 
-The final step is to update your application to work from Cloudant instead of Iris Couch. Again, this is highly specific for each application; however, the basic idea is simply replace *iriscouch* with *cloudant*.
+The final step is to update your application to work from Cloudant instead of Iris Couch. Again, this is highly specific for each application; however, the basic idea is to simply replace *iriscouch* with *cloudant*.
 
 Search through your application source code for *iriscouch.com*. Change those to *cloudant.com*.
 
@@ -162,6 +169,8 @@ You have migrated!
 If you cannot completely migrate in an instant, changes might land on Iris Couch after you have already replicated. In most cases, just re-run the replication process, and you will re-sync your data. But you can also make the replication *continuous*, which will pull in all Iris Couch changes in real time.
 
 You're done! Relax and enjoy.
+
+<br><p><small><em>&copy; &quot;Apache&quot;, &quot;CouchDB&quot;, &quot;Apache CouchDB&quot;, and the CouchDB logo are trademarks or registered trademarks of The Apache Software Foundation. All other brands and trademarks are the property of their respective owners.</em></small></p>
 
 [END]: ------------------------------------------------------------------------
 
